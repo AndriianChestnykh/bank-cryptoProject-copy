@@ -25,14 +25,13 @@ jobs:
         node-version: 22
         cache: 'npm'
     - run: npm ci
-    - run: rm -rf ./dist
-    - run: mkdir -p ./dist
+    - run: mkdir -p ./build
     - run: npm run build
       env:
         CI: false
     - uses: actions/upload-pages-artifact@v3
       with:
-        path: ./dist
+        path: ./build
 
   deploy:
     needs: build
