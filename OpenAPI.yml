@@ -1,0 +1,138 @@
+openapi: 3.0.3
+info:
+  title: ZKX Proof of Concept API
+  version: "0.1"
+servers:
+  - url: http://localhost:3001/v1
+components:
+  schemas:
+    Address:
+      type: string
+      pattern: ^0x[a-fA-F0-9]{40}$
+    AssetSymbol:
+      type: string
+      enum: [USDT, ETH]
+    OperationType:
+      type: string
+      enum: [STABLECOIN_OP, DEX_SWAP]
+    Amount:
+      type: string
+      description: Decimal string; service validates against token decimals
+    StablecoinOpParams:
+      type: object
+      required: [type, amount]
+      properties:
+        type:
+          type: string
+          enum: [ISSUE, REDEEM]
+        amount:
+          type: string
+          description: Decimal string; service validates against token decimals
+    OperationState:
+        type: string
+        enum: [PENDING, COMPLETED, FAILED]
+    ChainId:
+        type: integer
+    DexSwapParams:
+        type: object
+        required: [base_asset, quote_asset, side, amount]
+        properties:
+            base_asset:
+                $ref: '#/components/schemas/AssetSymbol'
+            quote_asset:
+                $ref: '#/components/schemas/AssetSymbol'
+            side:
+                type: string
+                enum: [BUY, SELL]
+            amount:
+                $ref: '#/components/schemas/Amount'
+    CreateOperationRequest:
+      type: object
+      required: [type, user_id]
+      properties:
+        type:
+          $ref: '#/components/schemas/OperationType'
+        user_id:
+          type: string
+        params:
+            type: object
+            description: Parameters specific to the operation type
+            oneOf:
+                - $ref: '#/components/schemas/StablecoinOpParams'
+                - $ref: '#/components/schemas/DexSwapParams'
+    Operation:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          $ref: '#/components/schemas/OperationType'
+        params:
+            type: object
+            description: Parameters specific to the operation type
+            oneOf:
+                - $ref: '#/components/schemas/StablecoinOpParams'
+                - $ref: '#/components/schemas/DexSwapParams'
+        state:
+          $ref: '#/components/schemas/OperationState'
+        chain_id:
+          $ref: '#/components/schemas/ChainId'
+        tx_hash:
+          type: string
+        user_id:
+          type: string
+        user_blockchain_address:
+          $ref: '#/components/schemas/Address'
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        error:
+          type: object
+          properties:
+            code: { type: string }
+            message: { type: string }
+            details: { type: object }
+
+paths:
+  /operations:
+    post:
+      summary: Create stablecoin transfer or DEX swap operation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOperationRequest'
+      responses:
+        '202':
+          description: Accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Operation'
+        '400': { description: Invalid input }
+
+  /users/{user_id}/operations:
+    get:
+      summary: List operations for a user
+      parameters:
+        - in: path
+          name: user_id
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/Operation' }
+                  next_cursor:
+                    type: string
