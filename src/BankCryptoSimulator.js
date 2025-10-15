@@ -16,7 +16,7 @@ export default function BankCryptoSimulator() {
   const [userStable, setUserStable] = useState(0);
   const [userEth, setUserEth] = useState(0);
 
-  const [showMarketPricing, setShowMarketPricing] = useState(false);
+  const [showMarketPricing, setShowMarketPricing] = useState(true);
 
   // Market/price
   const [ethPrice, setEthPrice] = useState(INITIAL_ETH_PRICE);
@@ -125,21 +125,18 @@ export default function BankCryptoSimulator() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
           {/* Left: Bank overview */}
           <section className="space-y-4">
-            <h2 className="text-2xl font-semibold">Bank Dashboard</h2>
-            <p className="text-sm text-gray-600">Simulation of bank and user balances. Stablecoin = 1 USD.</p>
+            <h2 className="text-2xl font-semibold">Bank Wallet</h2>
 
             <div className="bg-gray-100 p-4 rounded-lg">
               <h3 className="font-medium">Bank balances</h3>
               <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
                 <div className="p-3 bg-white rounded shadow-sm">
-                  <div className="text-xs text-gray-500">USD reserve</div>
                   <div className="text-xl font-mono">${bankUsd.toLocaleString()}</div>
                   <input type="range" min="0" max="5000000" step="1000" value={bankUsd}
                     onChange={e => setBankUsd(Number(e.target.value))}
                     className="w-full mt-2" />
                 </div>
                 <div className="p-3 bg-white rounded shadow-sm">
-                  <div className="text-xs text-gray-500">Stablecoin reserve</div>
                   <div className="text-xl font-mono">{bankStable.toLocaleString()} USDT</div>
                   <input type="range" min="0" max="5000000" step="1000" value={bankStable}
                     onChange={e => setBankStable(Number(e.target.value))}
@@ -177,14 +174,14 @@ export default function BankCryptoSimulator() {
                         setEthPrice(v);
                       }}
                       className="w-full p-2 rounded border" />
-                    <button className="px-3 py-2 bg-blue-600 text-white rounded" onClick={() => setEthPrice(INITIAL_ETH_PRICE)}>Reset</button>
+                    <button className="px-3 py-2 bg-gray-500 text-white rounded" onClick={() => setEthPrice(INITIAL_ETH_PRICE)}>Reset</button>
                   </div>
                   <div className="text-sm text-gray-600 mt-2">Rates can be fetched from an external API.</div>
                 </div>
               )}
             </div>
 
-            <button onClick={handleReset} className="w-full py-2 rounded bg-red-500 text-white">Reset all</button>
+            <button onClick={handleReset} className="w-full py-2 rounded bg-gray-500 text-white">Reset all</button>
           </section>
 
           {/* Middle: User area */}
@@ -194,23 +191,20 @@ export default function BankCryptoSimulator() {
             <div className="bg-gray-100 p-4 rounded-lg">
               <div className="grid grid-cols-2 gap-3">
                 <div className="p-3 bg-white rounded shadow-sm">
-                  <div className="text-xs text-gray-500">USD (fiat)</div>
                   <div className="text-xl font-mono">${userUsd.toLocaleString()}</div>
                   <input type="range" min="0" max="200000" step="100" value={userUsd}
                     onChange={e => setUserUsd(Number(e.target.value))}
                     className="w-full mt-2" />
                 </div>
                 <div className="p-3 bg-white rounded shadow-sm">
-                  <div className="text-xs text-gray-500">Stablecoins</div>
                   <div className="text-xl font-mono">{userStable.toLocaleString()} USDT</div>
                   <input type="range" min="0" max="100000" step="10" value={userStable}
                     onChange={e => setUserStable(Number(e.target.value))}
                     className="w-full mt-2" />
                 </div>
                 <div className="col-span-2 p-3 bg-white rounded shadow-sm">
-                  <div className="text-xs text-gray-500">ETH Holdings</div>
                   <div className="text-xl font-mono">{userEth.toFixed(8)} ETH</div>
-                  <div className="text-sm text-gray-400 mt-2">Equivalent: ${(userEth * ethPrice).toFixed(2)} USD</div>
+                  <div className="text-s text-gray-500 mt-2">Equivalent: ${(userEth * ethPrice).toFixed(2)} USD</div>
                 </div>
               </div>
             </div>
@@ -218,11 +212,11 @@ export default function BankCryptoSimulator() {
             {/* Trading sections side by side */}
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
               {/* Fiat <-> Stablecoin exchange */}
-              <div className="bg-white p-4 rounded-lg shadow-sm space-y-6 flex flex-col h-full">
-                <h3 className="font-medium">USD/USDT</h3>
-                <div className="flex-1 space-y-6">
+              <div className="bg-white p-4 rounded-lg shadow-sm space-y-3 flex flex-col h-full">
+                <h3 className="font-medium">USDT / USD</h3>
+                <div className="flex-1 space-y-3">
                   <div>
-                    <label className="text-xs text-gray-500">Amount (max {Math.min(userUsd, 500_000).toFixed(2)})</label>
+                    <label className="text-s text-gray-500">Amount (max {Math.min(userUsd, 500_000).toFixed(2)})</label>
                     <div className="mt-3 grid grid-cols-1 gap-2">
                       <input type="number" min="0" max={Math.min(userUsd, 500_000)} value={fiatToStable}
                         onChange={e => setFiatToStable(Number(e.target.value))}
@@ -234,13 +228,13 @@ export default function BankCryptoSimulator() {
                     </div>
                   </div>
                   <div>
-                    <label className="text-xs text-gray-500">Amount (max {Math.min(userStable, 500_000).toFixed(2)})</label>
+                    <label className="text-s text-gray-500">Amount (max {Math.min(userStable, 500_000).toFixed(2)})</label>
                     <div className="mt-3 grid grid-cols-1 gap-2">
                       <input type="number" min="0" max={Math.min(userStable, 500_000)} value={stableToFiat}
                         onChange={e => setStableToFiat(Number(e.target.value))}
                         className="p-2 rounded border" />
                       <div className="flex gap-2">
-                        <button onClick={handleSellStable} className="flex-1 py-2 rounded bg-blue-600 text-white">Sell USDT</button>
+                        <button onClick={handleSellStable} className="flex-1 py-2 rounded bg-red-500 text-white">Sell USDT</button>
                         <button onClick={() => setStableToFiat(Math.min(userStable, 500_000))} className="py-2 px-3 rounded bg-gray-200">Max</button>
                       </div>
                     </div>
@@ -249,11 +243,11 @@ export default function BankCryptoSimulator() {
               </div>
 
               {/* Buy/Sell ETH */}
-              <div className="bg-white p-4 rounded-lg shadow-sm space-y-6 flex flex-col h-full">
-                <h3 className="font-medium">USDT/ETH</h3>
-                <div className="flex-1 space-y-6">
+              <div className="bg-white p-4 rounded-lg shadow-sm space-y-3 flex flex-col h-full">
+                <h3 className="font-medium">ETH / USDT</h3>
+                <div className="flex-1 space-y-3">
                   <div>
-                    <label className="text-xs text-gray-500">Amount (max {Math.min(maxSpend, 1_000_000).toFixed(2)})</label>
+                    <label className="text-s text-gray-500">Amount (max {Math.min(maxSpend, 1_000_000).toFixed(2)})</label>
                     <div className="mt-3 grid grid-cols-1 gap-2">
                       <input type="number" min="0" max={Math.min(maxSpend, 1_000_000)} step="0.01" value={spendStableAmount}
                         onChange={e => setSpendStableAmount(Number(e.target.value))}
@@ -266,13 +260,13 @@ export default function BankCryptoSimulator() {
                   </div>
 
                   <div>
-                    <label className="text-xs text-gray-500">Amount (max {stableIfSell.toFixed(2)})</label>
+                    <label className="text-s text-gray-500">Amount (max {stableIfSell.toFixed(2)})</label>
                     <div className="mt-3 grid grid-cols-1 gap-2">
                       <input type="number" min="0" max={stableIfSell} step="0.01" value={stableIfSell}
                         onChange={e => setSellEthAmount(Number(e.target.value) / ethPrice)}
                         className="p-2 rounded border" />
                       <div className="flex gap-2">
-                        <button onClick={handleSellETH} className="flex-1 py-2 rounded bg-blue-600 text-white">Sell ETH</button>
+                        <button onClick={handleSellETH} className="flex-1 py-2 rounded bg-red-500 text-white">Sell ETH</button>
                         <button onClick={() => setSellEthAmount(maxSellEth)} className="py-2 px-3 rounded bg-gray-200">Max</button>
                       </div>
                     </div>
