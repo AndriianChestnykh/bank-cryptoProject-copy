@@ -198,7 +198,7 @@ export default function BankCryptoSimulator() {
                 </div>
                 <div className="p-3 bg-white rounded shadow-sm">
                   <div className="text-xl font-mono">{userStable.toLocaleString()} USDT</div>
-                  <input type="range" min="0" max="100000" step="10" value={userStable}
+                  <input type="range" min="0" max="100000" step="100" value={userStable}
                     onChange={e => setUserStable(Number(e.target.value))}
                     className="w-full mt-2" />
                 </div>
@@ -249,7 +249,7 @@ export default function BankCryptoSimulator() {
                   <div>
                     <label className="text-s text-gray-500">Amount (max {Math.min(maxSpend, 1_000_000).toFixed(2)})</label>
                     <div className="mt-3 grid grid-cols-1 gap-2">
-                      <input type="number" min="0" max={Math.min(maxSpend, 1_000_000)} step="0.01" value={spendStableAmount}
+                      <input type="number" min="0" max={Math.min(maxSpend, 1_000_000)} step="1000" value={spendStableAmount}
                         onChange={e => setSpendStableAmount(Number(e.target.value))}
                         className="p-2 rounded border" />
                       <div className="flex gap-2">
@@ -262,7 +262,7 @@ export default function BankCryptoSimulator() {
                   <div>
                     <label className="text-s text-gray-500">Amount (max {stableIfSell.toFixed(2)})</label>
                     <div className="mt-3 grid grid-cols-1 gap-2">
-                      <input type="number" min="0" max={stableIfSell} step="0.01" value={stableIfSell}
+                      <input type="number" min="0" max={stableIfSell} step="1000" value={stableIfSell}
                         onChange={e => setSellCryptoAmount(Number(e.target.value) / cryptoPrice)}
                         className="p-2 rounded border" />
                       <div className="flex gap-2">

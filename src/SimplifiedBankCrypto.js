@@ -199,7 +199,7 @@ export default function SimplifiedBankCrypto() {
                 <div>
                   <label className="text-s text-gray-500">Amount to spend (max {Math.min(maxSpendUsd, 500_000).toFixed(2)})</label>
                   <div className="mt-3 grid grid-cols-1 gap-2">
-                    <input type="number" min="0" max={Math.min(maxSpendUsd, 500_000)} step="0.01" value={spendUsdAmount}
+                    <input type="number" min="0" max={Math.min(maxSpendUsd, 500_000)} step="1000" value={spendUsdAmount}
                       onChange={e => setSpendUsdAmount(Number(e.target.value))}
                       className="p-2 rounded border" />
                     <div className="text-sm text-gray-600">You will receive ~ <span className="font-mono">{cryptoIfBuy.toFixed(6)}</span> BTC at price <span className="font-mono">${cryptoPrice}</span>.</div>
@@ -213,7 +213,7 @@ export default function SimplifiedBankCrypto() {
                 <div>
                   <label className="text-s text-gray-500">Amount to receive (max {Math.min(userCrypto * cryptoPrice, 500_000).toFixed(2)})</label>
                   <div className="mt-3 grid grid-cols-1 gap-2">
-                    <input type="number" min="0" max={Math.min(userCrypto * cryptoPrice, 500_000)} step="0.01" value={receiveUsdAmount}
+                    <input type="number" min="0" max={Math.min(userCrypto * cryptoPrice, 500_000)} step="1000" value={receiveUsdAmount}
                       onChange={e => setReceiveUsdAmount(Number(e.target.value))}
                       className="p-2 rounded border" />
                     <div className="text-sm text-gray-600">You will sell ~ <span className="font-mono">{cryptoToSell.toFixed(6)}</span> BTC at price <span className="font-mono">${cryptoPrice}</span>.</div>
