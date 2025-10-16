@@ -1,11 +1,11 @@
 import React, { useState, useMemo } from "react";
 
 // BankCryptoSimulator.jsx
-// React component simulating a bank with USD, stablecoins, and ETH balances.
-// Supports fiat ⇄ stablecoin exchange, ETH purchase, and transaction history.
+// React component simulating a bank with USD, stablecoins, and crypto balances.
+// Supports fiat ⇄ stablecoin exchange, crypto purchase, and transaction history.
 
 export default function BankCryptoSimulator() {
-  const INITIAL_ETH_PRICE = 2000;
+  const INITIAL_CRYPTO_PRICE = 100000;
 
   // Bank-side balances
   const [bankUsd, setBankUsd] = useState(1_000_000);
@@ -14,25 +14,25 @@ export default function BankCryptoSimulator() {
   // User balances
   const [userUsd, setUserUsd] = useState(10_000);
   const [userStable, setUserStable] = useState(0);
-  const [userEth, setUserEth] = useState(0);
+  const [userCrypto, setUserCrypto] = useState(0);
 
   const [showMarketPricing, setShowMarketPricing] = useState(true);
 
   // Market/price
-  const [ethPrice, setEthPrice] = useState(INITIAL_ETH_PRICE);
+  const [cryptoPrice, setCryptoPrice] = useState(INITIAL_CRYPTO_PRICE);
   
   // Market liquidity (simulating open market)
   const [marketUsdtLiquidity, setMarketUsdtLiquidity] = useState(5_000_000);
 
-  // ETH buy flow
+  // Crypto buy flow
   const [spendStableAmount, setSpendStableAmount] = useState(0);
   const maxSpend = useMemo(() => Math.max(0, userStable), [userStable]);
-  const ethIfBuy = useMemo(() => (ethPrice > 0 ? spendStableAmount / ethPrice : 0), [spendStableAmount, ethPrice]);
+  const cryptoIfBuy = useMemo(() => (cryptoPrice > 0 ? spendStableAmount / cryptoPrice : 0), [spendStableAmount, cryptoPrice]);
 
-  // ETH sell flow
-  const [sellEthAmount, setSellEthAmount] = useState(0);
-  const maxSellEth = useMemo(() => Math.max(0, userEth), [userEth]);
-  const stableIfSell = useMemo(() => +(sellEthAmount * ethPrice).toFixed(2), [sellEthAmount, ethPrice]);
+  // Crypto sell flow
+  const [sellCryptoAmount, setSellCryptoAmount] = useState(0);
+  const maxSellCrypto = useMemo(() => Math.max(0, userCrypto), [userCrypto]);
+  const stableIfSell = useMemo(() => +(sellCryptoAmount * cryptoPrice).toFixed(2), [sellCryptoAmount, cryptoPrice]);
 
   // Stablecoin ⇄ Fiat flows
   const [fiatToStable, setFiatToStable] = useState(0);
@@ -45,33 +45,33 @@ export default function BankCryptoSimulator() {
   }
 
   // Handlers
-  function handleBuyETH() {
+  function handleBuyCrypto() {
     const spend = Number(spendStableAmount);
     if (!spend || spend <= 0) return alert("Enter a positive amount.");
     if (spend > 1_000_000) return alert("Per-transaction limit is 1,000,000 USDT.");
     if (spend > userStable) return alert("Insufficient stablecoin balance.");
     if (spend > marketUsdtLiquidity) return alert("Insufficient market liquidity.");
 
-    const ethBought = spend / ethPrice;
+    const cryptoBought = spend / cryptoPrice;
     setUserStable(prev => +(prev - spend).toFixed(6));
-    setUserEth(prev => +(prev + ethBought).toFixed(8));
+    setUserCrypto(prev => +(prev + cryptoBought).toFixed(8));
     setMarketUsdtLiquidity(prev => +(prev + spend).toFixed(2));
     setSpendStableAmount(0);
-    addHistory("Buy ETH", `Spent ${spend} USDT, received ${ethBought.toFixed(6)} ETH (from market)`);
+    addHistory("Buy BTC", `Spent ${spend} USDT, received ${cryptoBought.toFixed(6)} BTC (from market)`);
   }
 
-  function handleSellETH() {
-    const ethAmt = Number(sellEthAmount);
-    if (!ethAmt || ethAmt <= 0) return alert("Enter a positive amount.");
-    if (ethAmt > userEth) return alert("Insufficient ETH balance.");
-    const receiveStable = +(ethAmt * ethPrice).toFixed(2);
+  function handleSellCrypto() {
+    const cryptoAmt = Number(sellCryptoAmount);
+    if (!cryptoAmt || cryptoAmt <= 0) return alert("Enter a positive amount.");
+    if (cryptoAmt > userCrypto) return alert("Insufficient BTC balance.");
+    const receiveStable = +(cryptoAmt * cryptoPrice).toFixed(2);
     if (receiveStable > marketUsdtLiquidity) return alert("Insufficient market liquidity.");
 
-    setUserEth(prev => +(prev - ethAmt).toFixed(8));
+    setUserCrypto(prev => +(prev - cryptoAmt).toFixed(8));
     setUserStable(prev => +(prev + receiveStable).toFixed(2));
     setMarketUsdtLiquidity(prev => +(prev - receiveStable).toFixed(2));
-    setSellEthAmount(0);
-    addHistory("Sell ETH", `Sold ${ethAmt} ETH, received ${receiveStable} USDT (to market)`);
+    setSellCryptoAmount(0);
+    addHistory("Sell BTC", `Sold ${cryptoAmt} BTC, received ${receiveStable} USDT (to market)`);
   }
 
   function handleBuyStable() {
@@ -109,8 +109,8 @@ export default function BankCryptoSimulator() {
     setBankStable(1_000_000);
     setUserUsd(10_000);
     setUserStable(0);
-    setUserEth(0);
-    setEthPrice(INITIAL_ETH_PRICE);
+    setUserCrypto(0);
+    setCryptoPrice(INITIAL_CRYPTO_PRICE);
     setMarketUsdtLiquidity(5_000_000);
     setSpendStableAmount(0);
     setFiatToStable(0);
@@ -166,15 +166,15 @@ export default function BankCryptoSimulator() {
               </h3>
               {showMarketPricing && (
                 <div className="mt-3">
-                  <label className="text-xs text-gray-500">ETH price (USD)</label>
+                  <label className="text-s text-gray-500">BTC price (USD)</label>
                   <div className="mt-1 flex gap-2 items-center">
-                    <input type="number" value={ethPrice} min="0" max="10000" step="0.01"
+                    <input type="number" value={cryptoPrice} min="0" max="1000000" step="1000"
                       onChange={e => {
-                        const v = Math.max(0, Math.min(10000, Number(e.target.value)));
-                        setEthPrice(v);
+                        const v = Math.max(0, Math.min(1000000, Number(e.target.value)));
+                        setCryptoPrice(v);
                       }}
                       className="w-full p-2 rounded border" />
-                    <button className="px-3 py-2 bg-gray-500 text-white rounded" onClick={() => setEthPrice(INITIAL_ETH_PRICE)}>Reset</button>
+                    <button className="px-3 py-2 bg-gray-500 text-white rounded" onClick={() => setCryptoPrice(INITIAL_CRYPTO_PRICE)}>Reset</button>
                   </div>
                   <div className="text-sm text-gray-600 mt-2">Rates can be fetched from an external API.</div>
                 </div>
@@ -203,8 +203,8 @@ export default function BankCryptoSimulator() {
                     className="w-full mt-2" />
                 </div>
                 <div className="col-span-2 p-3 bg-white rounded shadow-sm">
-                  <div className="text-xl font-mono">{userEth.toFixed(8)} ETH</div>
-                  <div className="text-s text-gray-500 mt-2">Equivalent: ${(userEth * ethPrice).toFixed(2)} USD</div>
+                  <div className="text-xl font-mono">{userCrypto.toFixed(8)} BTC</div>
+                  <div className="text-s text-gray-500 mt-2">Equivalent: ${(userCrypto * cryptoPrice).toFixed(2)} USD</div>
                 </div>
               </div>
             </div>
@@ -242,9 +242,9 @@ export default function BankCryptoSimulator() {
                 </div>
               </div>
 
-              {/* Buy/Sell ETH */}
+              {/* Buy/Sell BTC */}
               <div className="bg-white p-4 rounded-lg shadow-sm space-y-3 flex flex-col h-full">
-                <h3 className="font-medium">ETH / USDT</h3>
+                <h3 className="font-medium">BTC / USDT</h3>
                 <div className="flex-1 space-y-3">
                   <div>
                     <label className="text-s text-gray-500">Amount (max {Math.min(maxSpend, 1_000_000).toFixed(2)})</label>
@@ -253,7 +253,7 @@ export default function BankCryptoSimulator() {
                         onChange={e => setSpendStableAmount(Number(e.target.value))}
                         className="p-2 rounded border" />
                       <div className="flex gap-2">
-                        <button onClick={handleBuyETH} className="flex-1 py-2 rounded bg-green-600 text-white">Buy ETH</button>
+                        <button onClick={handleBuyCrypto} className="flex-1 py-2 rounded bg-green-600 text-white">Buy BTC</button>
                         <button onClick={() => setSpendStableAmount(Math.min(maxSpend, 1_000_000))} className="py-2 px-3 rounded bg-gray-200">Max</button>
                       </div>
                     </div>
@@ -263,11 +263,11 @@ export default function BankCryptoSimulator() {
                     <label className="text-s text-gray-500">Amount (max {stableIfSell.toFixed(2)})</label>
                     <div className="mt-3 grid grid-cols-1 gap-2">
                       <input type="number" min="0" max={stableIfSell} step="0.01" value={stableIfSell}
-                        onChange={e => setSellEthAmount(Number(e.target.value) / ethPrice)}
+                        onChange={e => setSellCryptoAmount(Number(e.target.value) / cryptoPrice)}
                         className="p-2 rounded border" />
                       <div className="flex gap-2">
-                        <button onClick={handleSellETH} className="flex-1 py-2 rounded bg-red-500 text-white">Sell ETH</button>
-                        <button onClick={() => setSellEthAmount(maxSellEth)} className="py-2 px-3 rounded bg-gray-200">Max</button>
+                        <button onClick={handleSellCrypto} className="flex-1 py-2 rounded bg-red-500 text-white">Sell BTC</button>
+                        <button onClick={() => setSellCryptoAmount(maxSellCrypto)} className="py-2 px-3 rounded bg-gray-200">Max</button>
                       </div>
                     </div>
                   </div>

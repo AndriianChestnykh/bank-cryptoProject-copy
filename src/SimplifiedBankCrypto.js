@@ -2,37 +2,37 @@ import React, { useState, useMemo } from "react";
 
 // SimplifiedBankCrypto.jsx
 // Simplified version where user doesn't see stablecoins but they work under the hood
-// User spends USD directly to buy ETH (two transactions happen: USD->USDT, USDT->ETH)
+// User spends USD directly to buy crypto (two transactions happen: USD->USDT, USDT->Crypto)
 
 export default function SimplifiedBankCrypto() {
-  const INITIAL_ETH_PRICE = 2000;
+  const INITIAL_CRYPTO_PRICE = 100000;
 
   // Bank-side balances
   const [bankUsd, setBankUsd] = useState(1_000_000);
   const [bankStable, setBankStable] = useState(1_000_000);
 
-  // User balances (only USD and ETH visible to user)
+  // User balances (only USD and Crypto visible to user)
   const [userUsd, setUserUsd] = useState(10_000);
   const [userStable, setUserStable] = useState(0); // Hidden from user
-  const [userEth, setUserEth] = useState(0);
+  const [userCrypto, setUserCrypto] = useState(0);
 
   const [showMarketPricing, setShowMarketPricing] = useState(true);
 
   // Market/price
-  const [ethPrice, setEthPrice] = useState(INITIAL_ETH_PRICE);
+  const [cryptoPrice, setCryptoPrice] = useState(INITIAL_CRYPTO_PRICE);
   
   // Market liquidity (simulating open market)
   const [marketUsdtLiquidity, setMarketUsdtLiquidity] = useState(5_000_000);
 
-  // ETH buy flow (user enters USD amount)
+  // Crypto buy flow (user enters USD amount)
   const [spendUsdAmount, setSpendUsdAmount] = useState(0);
   const maxSpendUsd = useMemo(() => Math.max(0, userUsd), [userUsd]);
-  const ethIfBuy = useMemo(() => (ethPrice > 0 ? spendUsdAmount / ethPrice : 0), [spendUsdAmount, ethPrice]);
+  const cryptoIfBuy = useMemo(() => (cryptoPrice > 0 ? spendUsdAmount / cryptoPrice : 0), [spendUsdAmount, cryptoPrice]);
 
-  // ETH sell flow (user enters USD amount they want to receive)
+  // Crypto sell flow (user enters USD amount they want to receive)
   const [receiveUsdAmount, setReceiveUsdAmount] = useState(0);
-  const maxSellEth = useMemo(() => Math.max(0, userEth), [userEth]);
-  const ethToSell = useMemo(() => (ethPrice > 0 ? receiveUsdAmount / ethPrice : 0), [receiveUsdAmount, ethPrice]);
+  const maxSellCrypto = useMemo(() => Math.max(0, userCrypto), [userCrypto]);
+  const cryptoToSell = useMemo(() => (cryptoPrice > 0 ? receiveUsdAmount / cryptoPrice : 0), [receiveUsdAmount, cryptoPrice]);
 
   // Transaction history
   const [history, setHistory] = useState([]);
@@ -41,7 +41,7 @@ export default function SimplifiedBankCrypto() {
   }
 
   // Handlers
-  function handleBuyETH() {
+  function handleBuyCrypto() {
     const spendUsd = Number(spendUsdAmount);
     if (!spendUsd || spendUsd <= 0) return alert("Enter a positive amount.");
     if (spendUsd > 500_000) return alert("Per-transaction limit is 500,000 USD.");
@@ -51,38 +51,38 @@ export default function SimplifiedBankCrypto() {
 
     // Two transactions under the hood:
     // 1. USD -> USDT (1:1)
-    // 2. USDT -> ETH (at market rate)
+    // 2. USDT -> Crypto (at market rate)
     const usdtAmount = spendUsd; // 1:1 conversion
-    const ethBought = usdtAmount / ethPrice;
+    const cryptoBought = usdtAmount / cryptoPrice;
 
     // Update balances
     setUserUsd(prev => prev - spendUsd);
     setUserStable(prev => +(prev + usdtAmount).toFixed(6)); // Hidden from user
-    setUserEth(prev => +(prev + ethBought).toFixed(8));
+    setUserCrypto(prev => +(prev + cryptoBought).toFixed(8));
     setBankUsd(prev => prev + spendUsd);
     setBankStable(prev => +(prev - usdtAmount).toFixed(2));
     setMarketUsdtLiquidity(prev => +(prev + usdtAmount).toFixed(2));
     
     setSpendUsdAmount(0);
-    addHistory("Buy ETH", `Spent ${spendUsd} USD, received ${ethBought.toFixed(6)} ETH (via USDT)`);
+    addHistory("Buy BTC", `Spent ${spendUsd} USD, received ${cryptoBought.toFixed(6)} BTC (via USDT)`);
   }
 
-  function handleSellETH() {
+  function handleSellCrypto() {
     const receiveUsd = Number(receiveUsdAmount);
     if (!receiveUsd || receiveUsd <= 0) return alert("Enter a positive amount.");
     if (receiveUsd > 500_000) return alert("Per-transaction limit is 500,000 USD.");
     if (receiveUsd > marketUsdtLiquidity) return alert("Insufficient market liquidity.");
     
-    const ethToSellAmount = receiveUsd / ethPrice;
-    if (ethToSellAmount > userEth) return alert("Insufficient ETH balance.");
+    const cryptoToSellAmount = receiveUsd / cryptoPrice;
+    if (cryptoToSellAmount > userCrypto) return alert("Insufficient BTC balance.");
 
     // Two transactions under the hood:
-    // 1. ETH -> USDT (at market rate)
+    // 1. Crypto -> USDT (at market rate)
     // 2. USDT -> USD (1:1)
     const usdtReceived = receiveUsd; // 1:1 conversion
 
     // Update balances
-    setUserEth(prev => +(prev - ethToSellAmount).toFixed(8));
+    setUserCrypto(prev => +(prev - cryptoToSellAmount).toFixed(8));
     setUserStable(prev => +(prev - usdtReceived).toFixed(6)); // Hidden from user
     setUserUsd(prev => prev + receiveUsd);
     setBankUsd(prev => prev - receiveUsd);
@@ -90,7 +90,7 @@ export default function SimplifiedBankCrypto() {
     setMarketUsdtLiquidity(prev => +(prev - usdtReceived).toFixed(2));
     
     setReceiveUsdAmount(0);
-    addHistory("Sell ETH", `Sold ${ethToSellAmount.toFixed(6)} ETH, received ${receiveUsd} USD (via USDT)`);
+    addHistory("Sell BTC", `Sold ${cryptoToSellAmount.toFixed(6)} BTC, received ${receiveUsd} USD (via USDT)`);
   }
 
   function handleReset() {
@@ -98,8 +98,8 @@ export default function SimplifiedBankCrypto() {
     setBankStable(1_000_000);
     setUserUsd(10_000);
     setUserStable(0);
-    setUserEth(0);
-    setEthPrice(INITIAL_ETH_PRICE);
+    setUserCrypto(0);
+    setCryptoPrice(INITIAL_CRYPTO_PRICE);
     setMarketUsdtLiquidity(5_000_000);
     setSpendUsdAmount(0);
     setReceiveUsdAmount(0);
@@ -155,15 +155,15 @@ export default function SimplifiedBankCrypto() {
               </h3>
               {showMarketPricing && (
                 <div className="mt-3">
-                  <label className="text-xs text-gray-500">ETH price (USD)</label>
+                  <label className="text-xs text-gray-500">BTC price (USD)</label>
                   <div className="mt-1 flex gap-2 items-center">
-                    <input type="number" value={ethPrice} min="0" max="10000" step="0.01"
+                    <input type="number" value={cryptoPrice} min="0" max="1000000" step="1000"
                       onChange={e => {
-                        const v = Math.max(0, Math.min(10000, Number(e.target.value)));
-                        setEthPrice(v);
+                        const v = Math.max(0, Math.min(1000000, Number(e.target.value)));
+                        setCryptoPrice(v);
                       }}
                       className="w-full p-2 rounded border" />
-                    <button className="px-3 py-2 bg-gray-500 text-white rounded" onClick={() => setEthPrice(INITIAL_ETH_PRICE)}>Reset</button>
+                    <button className="px-3 py-2 bg-gray-500 text-white rounded" onClick={() => setCryptoPrice(INITIAL_CRYPTO_PRICE)}>Reset</button>
                   </div>
                   <div className="text-sm text-gray-600 mt-2">Rates can be fetched from an external API.</div>
                 </div>
@@ -186,15 +186,15 @@ export default function SimplifiedBankCrypto() {
                     className="w-full mt-2" />
                 </div>
                 <div className="col-span-1 p-3 bg-white rounded shadow-sm">
-                  <div className="text-xl font-mono">{userEth.toFixed(8)} ETH</div>
-                  <div className="text-sm text-gray-400 mt-2">Equivalent: ${(userEth * ethPrice).toFixed(2)} USD</div>
+                  <div className="text-xl font-mono">{userCrypto.toFixed(8)} BTC</div>
+                  <div className="text-sm text-gray-400 mt-2">Equivalent: ${(userCrypto * cryptoPrice).toFixed(2)} USD</div>
                 </div>
               </div>
             </div>
 
-            {/* Direct USD to ETH trading */}
+            {/* Direct USD to Crypto trading */}
             <div className="bg-white p-4 rounded-lg shadow-sm space-y-3">
-              <h3 className="font-medium">ETH / USD</h3>
+              <h3 className="font-medium">BTC / USD</h3>
               <div className="flex-1 space-y-6">
                 <div>
                   <label className="text-s text-gray-500">Amount to spend (max {Math.min(maxSpendUsd, 500_000).toFixed(2)})</label>
@@ -202,24 +202,24 @@ export default function SimplifiedBankCrypto() {
                     <input type="number" min="0" max={Math.min(maxSpendUsd, 500_000)} step="0.01" value={spendUsdAmount}
                       onChange={e => setSpendUsdAmount(Number(e.target.value))}
                       className="p-2 rounded border" />
-                    <div className="text-sm text-gray-600">You will receive ~ <span className="font-mono">{ethIfBuy.toFixed(6)}</span> ETH at price <span className="font-mono">${ethPrice}</span>.</div>
+                    <div className="text-sm text-gray-600">You will receive ~ <span className="font-mono">{cryptoIfBuy.toFixed(6)}</span> BTC at price <span className="font-mono">${cryptoPrice}</span>.</div>
                     <div className="flex gap-2">
-                      <button onClick={handleBuyETH} className="flex-1 py-2 rounded bg-green-600 text-white">Buy ETH</button>
+                      <button onClick={handleBuyCrypto} className="flex-1 py-2 rounded bg-green-600 text-white">Buy BTC</button>
                       <button onClick={() => setSpendUsdAmount(Math.min(maxSpendUsd, 500_000))} className="py-2 px-3 rounded bg-gray-200">Max</button>
                     </div>
                   </div>
                 </div>
 
                 <div>
-                  <label className="text-s text-gray-500">Amount to receive (max {Math.min(userEth * ethPrice, 500_000).toFixed(2)})</label>
+                  <label className="text-s text-gray-500">Amount to receive (max {Math.min(userCrypto * cryptoPrice, 500_000).toFixed(2)})</label>
                   <div className="mt-3 grid grid-cols-1 gap-2">
-                    <input type="number" min="0" max={Math.min(userEth * ethPrice, 500_000)} step="0.01" value={receiveUsdAmount}
+                    <input type="number" min="0" max={Math.min(userCrypto * cryptoPrice, 500_000)} step="0.01" value={receiveUsdAmount}
                       onChange={e => setReceiveUsdAmount(Number(e.target.value))}
                       className="p-2 rounded border" />
-                    <div className="text-sm text-gray-600">You will sell ~ <span className="font-mono">{ethToSell.toFixed(6)}</span> ETH at price <span className="font-mono">${ethPrice}</span>.</div>
+                    <div className="text-sm text-gray-600">You will sell ~ <span className="font-mono">{cryptoToSell.toFixed(6)}</span> BTC at price <span className="font-mono">${cryptoPrice}</span>.</div>
                     <div className="flex gap-2">
-                      <button onClick={handleSellETH} className="flex-1 py-2 rounded bg-red-500 text-white">Sell ETH</button>
-                      <button onClick={() => setReceiveUsdAmount(Math.min(userEth * ethPrice, 500_000))} className="py-2 px-3 rounded bg-gray-200">Max</button>
+                      <button onClick={handleSellCrypto} className="flex-1 py-2 rounded bg-red-500 text-white">Sell BTC</button>
+                      <button onClick={() => setReceiveUsdAmount(Math.min(userCrypto * cryptoPrice, 500_000))} className="py-2 px-3 rounded bg-gray-200">Max</button>
                     </div>
                   </div>
                 </div>
