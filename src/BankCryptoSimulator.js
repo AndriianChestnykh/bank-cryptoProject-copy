@@ -1,121 +1,75 @@
 import React, { useState, useMemo } from "react";
+import { useBankCrypto } from "./hooks/useBankCrypto";
 
 // BankCryptoSimulator.jsx
 // React component simulating a bank with USD, stablecoins, and crypto balances.
 // Supports fiat ⇄ stablecoin exchange, crypto purchase, and transaction history.
 
 export default function BankCryptoSimulator() {
-  const INITIAL_CRYPTO_PRICE = 100000;
-
-  // Bank-side balances
-  const [bankUsd, setBankUsd] = useState(1_000_000);
-  const [bankStable, setBankStable] = useState(1_000_000);
-
-  // User balances
-  const [userUsd, setUserUsd] = useState(10_000);
-  const [userStable, setUserStable] = useState(0);
-  const [userCrypto, setUserCrypto] = useState(0);
-
   const [showMarketPricing, setShowMarketPricing] = useState(true);
 
-  // Market/price
-  const [cryptoPrice, setCryptoPrice] = useState(INITIAL_CRYPTO_PRICE);
-  
-  // Market liquidity (simulating open market)
-  const [marketUsdtLiquidity, setMarketUsdtLiquidity] = useState(5_000_000);
+  // Using shared hook
+  const {
+    bankUsd, bankStable, userUsd, userStable, userCrypto, cryptoPrice, marketUsdtLiquidity, history,
+    setBankUsd, setBankStable, setUserUsd, setUserStable, setUserCrypto, setCryptoPrice, setMarketUsdtLiquidity,
+    buyStable, sellStable, buyCrypto, sellCrypto, reset, maxSpendStable, maxSellCrypto, cryptoIfBuy, usdtIfSell,
+    INITIAL_CRYPTO_PRICE
+  } = useBankCrypto();
 
   // Crypto buy flow
   const [spendStableAmount, setSpendStableAmount] = useState(0);
-  const maxSpend = useMemo(() => Math.max(0, userStable), [userStable]);
-  const cryptoIfBuy = useMemo(() => (cryptoPrice > 0 ? spendStableAmount / cryptoPrice : 0), [spendStableAmount, cryptoPrice]);
+  const cryptoIfBuyCalculated = useMemo(() => cryptoIfBuy(spendStableAmount), [spendStableAmount, cryptoPrice]);
 
   // Crypto sell flow
   const [sellCryptoAmount, setSellCryptoAmount] = useState(0);
-  const maxSellCrypto = useMemo(() => Math.max(0, userCrypto), [userCrypto]);
-  const stableIfSell = useMemo(() => +(sellCryptoAmount * cryptoPrice).toFixed(2), [sellCryptoAmount, cryptoPrice]);
+  const usdtIfSellCalculated = useMemo(() => usdtIfSell(sellCryptoAmount), [sellCryptoAmount, cryptoPrice]);
 
   // Stablecoin ⇄ Fiat flows
   const [fiatToStable, setFiatToStable] = useState(0);
   const [stableToFiat, setStableToFiat] = useState(0);
 
-  // Transaction history
-  const [history, setHistory] = useState([]);
-  function addHistory(type, details) {
-    setHistory(prev => [{ id: Date.now(), type, details, timestamp: new Date().toLocaleTimeString() }, ...prev]);
-  }
-
   // Handlers
   function handleBuyCrypto() {
-    const spend = Number(spendStableAmount);
-    if (!spend || spend <= 0) return alert("Enter a positive amount.");
-    if (spend > 1_000_000) return alert("Per-transaction limit is 1,000,000 USDT.");
-    if (spend > userStable) return alert("Insufficient stablecoin balance.");
-    if (spend > marketUsdtLiquidity) return alert("Insufficient market liquidity.");
-
-    const cryptoBought = spend / cryptoPrice;
-    setUserStable(prev => +(prev - spend).toFixed(6));
-    setUserCrypto(prev => +(prev + cryptoBought).toFixed(8));
-    setMarketUsdtLiquidity(prev => +(prev + spend).toFixed(2));
+    const result = buyCrypto(Number(spendStableAmount));
+    if (!result.success) {
+      alert(result.error);
+      return;
+    }
     setSpendStableAmount(0);
-    addHistory("Buy BTC", `Spent ${spend} USDT, received ${cryptoBought.toFixed(6)} BTC (from market)`);
   }
 
   function handleSellCrypto() {
-    const cryptoAmt = Number(sellCryptoAmount);
-    if (!cryptoAmt || cryptoAmt <= 0) return alert("Enter a positive amount.");
-    if (cryptoAmt > userCrypto) return alert("Insufficient BTC balance.");
-    const receiveStable = +(cryptoAmt * cryptoPrice).toFixed(2);
-    if (receiveStable > marketUsdtLiquidity) return alert("Insufficient market liquidity.");
-
-    setUserCrypto(prev => +(prev - cryptoAmt).toFixed(8));
-    setUserStable(prev => +(prev + receiveStable).toFixed(2));
-    setMarketUsdtLiquidity(prev => +(prev - receiveStable).toFixed(2));
+    const result = sellCrypto(Number(sellCryptoAmount));
+    if (!result.success) {
+      alert(result.error);
+      return;
+    }
     setSellCryptoAmount(0);
-    addHistory("Sell BTC", `Sold ${cryptoAmt} BTC, received ${receiveStable} USDT (to market)`);
   }
 
   function handleBuyStable() {
-    const amt = Number(fiatToStable);
-    if (!amt || amt <= 0) return alert("Enter a positive amount.");
-    if (amt > userUsd) return alert("Insufficient user USD.");
-    if (amt > bankStable) return alert("Bank has insufficient stablecoin reserves.");
-    if (amt > 500_000) return alert("Per-transaction limit is 500,000 USD.");
-
-    setUserUsd(prev => prev - amt);
-    setUserStable(prev => prev + amt);
-    setBankUsd(prev => prev + amt);
-    setBankStable(prev => prev - amt);
+    const result = buyStable(Number(fiatToStable));
+    if (!result.success) {
+      alert(result.error);
+      return;
+    }
     setFiatToStable(0);
-    addHistory("Buy Stable", `Bought ${amt} USDT for ${amt} USD`);
   }
 
   function handleSellStable() {
-    const amt = Number(stableToFiat);
-    if (!amt || amt <= 0) return alert("Enter a positive amount.");
-    if (amt > userStable) return alert("Insufficient user stablecoins.");
-    if (amt > bankUsd) return alert("Bank has insufficient USD.");
-    if (amt > 500_000) return alert("Per-transaction limit is 500,000 USDT.");
-
-    setUserStable(prev => prev - amt);
-    setUserUsd(prev => prev + amt);
-    setBankUsd(prev => prev - amt);
-    setBankStable(prev => prev + amt);
+    const result = sellStable(Number(stableToFiat));
+    if (!result.success) {
+      alert(result.error);
+      return;
+    }
     setStableToFiat(0);
-    addHistory("Sell Stable", `Sold ${amt} USDT, received ${amt} USD`);
   }
 
   function handleReset() {
-    setBankUsd(1_000_000);
-    setBankStable(1_000_000);
-    setUserUsd(10_000);
-    setUserStable(0);
-    setUserCrypto(0);
-    setCryptoPrice(INITIAL_CRYPTO_PRICE);
-    setMarketUsdtLiquidity(5_000_000);
+    reset();
     setSpendStableAmount(0);
     setFiatToStable(0);
     setStableToFiat(0);
-    setHistory([]);
   }
 
   return (
@@ -247,22 +201,22 @@ export default function BankCryptoSimulator() {
                 <h3 className="font-medium">BTC / USDT</h3>
                 <div className="flex-1 space-y-3">
                   <div>
-                    <label className="text-s text-gray-500">Amount (max {Math.min(maxSpend, 1_000_000).toFixed(2)})</label>
+                    <label className="text-s text-gray-500">Amount (max {Math.min(maxSpendStable, 1_000_000).toFixed(2)})</label>
                     <div className="mt-3 grid grid-cols-1 gap-2">
-                      <input type="number" min="0" max={Math.min(maxSpend, 1_000_000)} step="1000" value={spendStableAmount}
+                      <input type="number" min="0" max={Math.min(maxSpendStable, 1_000_000)} step="1000" value={spendStableAmount}
                         onChange={e => setSpendStableAmount(Number(e.target.value))}
                         className="p-2 rounded border" />
                       <div className="flex gap-2">
                         <button onClick={handleBuyCrypto} className="flex-1 py-2 rounded bg-green-600 text-white">Buy BTC</button>
-                        <button onClick={() => setSpendStableAmount(Math.min(maxSpend, 1_000_000))} className="py-2 px-3 rounded bg-gray-200">Max</button>
+                        <button onClick={() => setSpendStableAmount(Math.min(maxSpendStable, 1_000_000))} className="py-2 px-3 rounded bg-gray-200">Max</button>
                       </div>
                     </div>
                   </div>
 
                   <div>
-                    <label className="text-s text-gray-500">Amount (max {stableIfSell.toFixed(2)})</label>
+                    <label className="text-s text-gray-500">Amount (max {usdtIfSellCalculated.toFixed(2)})</label>
                     <div className="mt-3 grid grid-cols-1 gap-2">
-                      <input type="number" min="0" max={stableIfSell} step="1000" value={stableIfSell}
+                      <input type="number" min="0" max={usdtIfSellCalculated} step="1000" value={usdtIfSellCalculated}
                         onChange={e => setSellCryptoAmount(Number(e.target.value) / cryptoPrice)}
                         className="p-2 rounded border" />
                       <div className="flex gap-2">
