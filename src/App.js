@@ -1,46 +1,31 @@
 import React, { useState } from 'react';
 import BankCryptoSimulator from './BankCryptoSimulator';
 import SimplifiedBankCrypto from './SimplifiedBankCrypto';
+import Navigation from './components/Navigation';
+import { VIEW_MODES } from './constants';
 import './App.css';
 
 function App() {
-  const [viewMode, setViewMode] = useState('detailed'); // 'detailed' or 'simplified'
+  const [currentView, setCurrentView] = useState(VIEW_MODES.DETAILED);
+
+  const renderContent = () => {
+    switch (currentView) {
+      case VIEW_MODES.DETAILED:
+        return <BankCryptoSimulator />;
+      case VIEW_MODES.SIMPLIFIED:
+        return <SimplifiedBankCrypto />;
+      default:
+        return <BankCryptoSimulator />;
+    }
+  };
 
   return (
     <div className="App">
-      {/* Navigation */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold text-gray-900">Bank Crypto Simulator</h1>
-            <div className="flex gap-4">
-              <button
-                onClick={() => setViewMode('detailed')}
-                className={`px-4 py-2 rounded-lg font-medium ${
-                  viewMode === 'detailed'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
-              >
-                Detailed View
-              </button>
-              <button
-                onClick={() => setViewMode('simplified')}
-                className={`px-4 py-2 rounded-lg font-medium ${
-                  viewMode === 'simplified'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
-              >
-                Simplified View
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Content */}
-      {viewMode === 'detailed' ? <BankCryptoSimulator /> : <SimplifiedBankCrypto />}
+      <Navigation 
+        currentView={currentView}
+        onViewChange={setCurrentView}
+      />
+      {renderContent()}
     </div>
   );
 }
